@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Recherche de films (OMDb)</title>
+        <link rel="stylesheet" href="styles/style.css" />
+    </head>
+    <body>
+        <header>
+            <h1>OMDb — Recherche de films</h1>
+
+            <div class="search-bar">
+                <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Ex: Inception, Matrix…"
+                    autocomplete="off"
+                />
+                <button id="searchButton">Rechercher</button>
+            </div>
+        </header>
+        <main>
+            <div id="message" aria-live="polite"></div>
+            <section id="resultsSection">
+                <h2>Résultats de la recherche</h2>
+
+                <div id="resultsContainer"></div>
+            </section>
+        </main>
+        <footer>
+            <p>
+                Application de recherche de films utilisant l'API
+                <a href="http://www.omdbapi.com/" target="_blank">OMDb</a>.
+            </p>
+        </footer>
+
+        <script src="scripts/index.js"></script>
+    </body>
+</html>
