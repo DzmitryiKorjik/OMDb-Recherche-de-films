@@ -22,50 +22,69 @@ searchInput.addEventListener('keydown', (e) => {
 
 // Fonction de recherche de films
 async function searchMovies(title) {
-    resultsContainer.innerHTML = '';
-    message.textContent = '';
+  resultsContainer.innerHTML = '';
+  message.textContent = '';
 
-    if (!title) {
-        message.textContent = 'Veuillez saisir un titre de film.';
-        return;
+  if (!title) {
+    message.textContent = 'Veuillez saisir un titre de film.';
+    return;
+  }
+
+  message.textContent = 'Recherche en cours…';
+
+  try {
+    let page = 1;
+    let all = [];
+    let totalResults = 0;
+
+    while (true) {
+      const res = await fetch(
+        `${apiUrl}?s=${encodeURIComponent(title)}&apikey=${apiKey}&page=${page}`
+      );
+      const data = await res.json();
+
+      if (data.Response !== 'True') break;
+
+      all = all.concat(data.Search);
+
+      totalResults = Number(data.totalResults || all.length);
+
+      // OMDb: 10 résultats par page
+      if (all.length >= totalResults) break;
+
+      page += 1;
+
+      // Option sécurité (évite boucle infinie si API renvoie mal)
+      if (page > 50) break;
     }
 
-    message.textContent = 'Recherche en cours…';
+    if (all.length === 0) {
+      message.textContent = `Aucun résultat pour "${title}".`;
+      return;
+    }
 
-    // Appel à l’API OMDb
-    try {
-        const res = await fetch(
-            `${apiUrl}?s=${encodeURIComponent(title)}&apikey=${apiKey}`
+    message.textContent = `${all.length} résultat(s) trouvé(s).`;
+
+    const detailedMovies = await Promise.all(
+      all.map(async (m) => {
+        const r = await fetch(
+          `${apiUrl}?i=${m.imdbID}&plot=short&apikey=${apiKey}`
         );
-        const data = await res.json();
+        return r.json();
+      })
+    );
 
-        resultsContainer.innerHTML = '';
+    detailedMovies.forEach((movie) => {
+      resultsContainer.appendChild(createMovieCard(movie));
+    });
 
-        if (data.Response === 'True') {
-            message.textContent = `${data.Search.length} résultat(s) trouvé(s).`;
-
-            // On récupère une description courte via un second appel par film (endpoint ?i=)
-            const detailedMovies = await Promise.all(
-                data.Search.map(async (m) => {
-                    const r = await fetch(
-                        `${apiUrl}?i=${m.imdbID}&plot=short&apikey=${apiKey}`
-                    );
-                    return r.json();
-                })
-            );
-
-            detailedMovies.forEach((movie) => {
-                resultsContainer.appendChild(createMovieCard(movie));
-            });
-        } else {
-            message.textContent = `Aucun résultat pour "${title}".`;
-        }
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        message.textContent =
-            'Erreur lors de l’appel à l’API. Vérifiez votre connexion et votre clé OMDb.';
-    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    message.textContent =
+      'Erreur lors de l’appel à l’API. Vérifiez votre connexion et votre clé OMDb.';
+  }
 }
+
 
 // Création d’une carte de film
 function createMovieCard(movie) {
